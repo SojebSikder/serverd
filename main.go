@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -221,7 +222,13 @@ func setupSSL(ssh *SSHClient, domain string) {
 }
 
 func main() {
-	var configFile = "config.yml"
+	// Define flags
+	var configFile string
+	flag.StringVar(&configFile, "file", "config.yml", "Specify config file")
+
+	// Parse the flags
+	flag.Parse()
+
 	// Read YAML file
 	data, err := os.ReadFile(configFile)
 	if err != nil {
