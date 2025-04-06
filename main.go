@@ -8,7 +8,23 @@ import (
 	"strings"
 
 	"golang.org/x/crypto/ssh"
+	"gopkg.in/yaml.v3"
 )
+
+type Config struct {
+	SSH struct {
+		Host string `yaml:"host"`
+		Port string `yaml:"port"`
+		User string `yaml:"user"`
+		Pass string `yaml:"pass"`
+	} `yaml:"ssh"`
+	Server struct {
+		ProjectName  string `yaml:"project_name"`
+		SudoPassword string `yaml:"sudo_password"`
+		Domain       string `yaml:"domain"`
+		SSL          bool   `yaml:"ssl"`
+	} `yaml:"server"`
+}
 
 type SSHClient struct {
 	client *ssh.Client
@@ -16,16 +32,18 @@ type SSHClient struct {
 
 var sudoPassword string
 
-func connectSSH(host, user, password string) (*SSHClient, error) {
+func connectSSH(user string, password string, host string, port string) (*SSHClient, error) {
+	if port == "" {
+		port = "22"
+	}
 	config := &ssh.ClientConfig{
 		User: user,
 		Auth: []ssh.AuthMethod{
 			ssh.Password(password),
 		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // for demo only
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
-	// client, err := ssh.Dial("tcp", host+":22", config)
-	client, err := ssh.Dial("tcp", host+":2223", config)
+	client, err := ssh.Dial("tcp", host+":"+port, config)
 	if err != nil {
 		return nil, err
 	}
@@ -107,10 +125,10 @@ func gitCloneRepo(ssh *SSHClient, repoType string) {
 	ssh.runInteractive(fmt.Sprintf("git clone https://%s@github.com/%s.git .", token, repo))
 }
 
-func setupFirewall(ssh *SSHClient, user string) {
-	printMessage("⚙️ Setting up firewall & user...")
-	ssh.runInteractive(fmt.Sprintf("adduser %s", user))
-	ssh.runInteractive(fmt.Sprintf("usermod -aG sudo %s", user))
+func setupFirewall(ssh *SSHClient) {
+	printMessage("⚙️ Setting up firewall...")
+	// ssh.runInteractive(fmt.Sprintf("adduser %s", user))
+	// ssh.runInteractive(fmt.Sprintf("usermod -aG sudo %s", user))
 	ssh.runInteractive("ufw allow OpenSSH")
 	ssh.runInteractive("ufw --force enable")
 }
@@ -203,20 +221,48 @@ func setupSSL(ssh *SSHClient, domain string) {
 }
 
 func main() {
-	host := prompt("Enter remote server IP")
-	user := prompt("Enter SSH username")
-	pass := prompt("Enter SSH password")
+	var configFile = "config.yml"
+	// Read YAML file
+	data, err := os.ReadFile(configFile)
+	if err != nil {
+		panic(err)
+	}
 
-	promptSudoPassword := prompt("Enter remote sudo password")
+	// Unmarshal into struct
+	var config Config
+	err = yaml.Unmarshal(data, &config)
+	if err != nil {
+		panic(err)
+	}
+	// Access command-line arguments
+	args := os.Args
 
-	sudoPassword = promptSudoPassword
+	if len(args) > 1 {
+		switch args[1] {
+		case "apply":
+			apply(config)
+		case "version":
+			fmt.Println("Version: 0.0.1")
+		}
 
-	project := prompt("Enter project name")
-	remoteUser := prompt("Enter user to create on remote server")
-	domain := prompt("Enter domain name")
-	needSSL := promptYesNo("Do you want SSL setup?")
+	} else {
+		fmt.Println("No arguments passed.")
+		return
+	}
+}
 
-	ssh, err := connectSSH(host, user, pass)
+func apply(config Config) {
+	host := config.SSH.Host
+	port := config.SSH.Port
+	user := config.SSH.User
+	pass := config.SSH.Pass
+	sudoPassword = config.Server.SudoPassword
+
+	project := config.Server.ProjectName
+	domain := config.Server.Domain
+	needSSL := config.Server.SSL
+
+	ssh, err := connectSSH(user, pass, host, port)
 	if err != nil {
 		log.Fatalf("SSH connection failed: %v", err)
 	}
@@ -224,7 +270,7 @@ func main() {
 
 	printMessage("🔑 Connected. Starting setup...")
 
-	setupFirewall(ssh, remoteUser)
+	setupFirewall(ssh)
 	setupNginx(ssh)
 	setupNginxBlock(ssh, domain, project, "backend", "4000")
 	setupNginxBlock(ssh, domain, project, "frontend", "3000")

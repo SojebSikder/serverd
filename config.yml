@@ -1,0 +1,11 @@
+ssh:
+  host: 192.168.4.2
+  port: 2223
+  user: ubuntu
+  pass: root
+
+server:
+  project_name: blog
+  sudo_password: root
+  domain: test.com
+  ssl: true
