@@ -23,15 +23,20 @@ func promptYesNo(message string) bool {
 	return strings.ToLower(answer) == "y"
 }
 
-func gitCloneRepo(ssh *SSHClient, repoType string) {
-	printMessage("⚙️ Cloning repo...")
+func gitCloneRepoWithToken(ssh *SSHClient) {
+	printMessage("Cloning repo...")
 	repo := prompt("Enter the GitHub repo (e.g., user/repo)")
 	token := prompt("Enter GitHub token")
 	ssh.runInteractive(fmt.Sprintf("git clone https://%s@github.com/%s.git .", token, repo))
 }
 
+func gitCloneRepo(ssh *SSHClient, repo string) {
+	printMessage("Cloning repo...")
+	ssh.runInteractive(fmt.Sprintf("git clone %s .", repo))
+}
+
 func setupFirewall(ssh *SSHClient) {
-	printMessage("⚙️ Setting up firewall...")
+	printMessage("Setting up firewall...")
 	// ssh.runInteractive(fmt.Sprintf("adduser %s", user))
 	// ssh.runInteractive(fmt.Sprintf("usermod -aG sudo %s", user))
 	ssh.runInteractive("ufw allow OpenSSH")
@@ -39,7 +44,7 @@ func setupFirewall(ssh *SSHClient) {
 }
 
 func setupNginx(ssh *SSHClient) {
-	printMessage("⚙️ Installing Nginx...")
+	printMessage("Installing Nginx...")
 	ssh.runInteractive("apt update")
 	ssh.runInteractive("apt install -y nginx")
 	ssh.runInteractive("ufw allow 'Nginx HTTP'")
@@ -48,7 +53,7 @@ func setupNginx(ssh *SSHClient) {
 }
 
 func setupNginxBlock(ssh *SSHClient, domain string, project string, service string, port string) {
-	printMessage(fmt.Sprintf("⚙️ Configuring Nginx for %s...", service))
+	printMessage(fmt.Sprintf("Configuring Nginx for %s...", service))
 	path := fmt.Sprintf("/var/www/%s/%s", project, service)
 	confPath := fmt.Sprintf("/etc/nginx/sites-available/%s_%s", project, service)
 
@@ -83,7 +88,7 @@ func setupNginxBlock(ssh *SSHClient, domain string, project string, service stri
 }
 
 func setupPostgres(ssh *SSHClient) {
-	printMessage("⚙️ Installing PostgreSQL...")
+	printMessage("Installing PostgreSQL...")
 	ssh.runInteractive("apt update")
 	ssh.runInteractive("apt install -y postgresql postgresql-contrib")
 	ssh.runInteractive("systemctl start postgresql")
@@ -91,28 +96,28 @@ func setupPostgres(ssh *SSHClient) {
 }
 
 func setupNode(ssh *SSHClient) {
-	printMessage("⚙️ Installing Node.js & PM2...")
+	printMessage("Installing Node.js & PM2...")
 	ssh.runInteractive("curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -")
 	ssh.runInteractive("apt install -y nodejs")
 	ssh.runInteractive("npm install -g pm2 yarn")
 }
 
-func setupNestApp(ssh *SSHClient, project string, name string) {
-	printMessage("⚙️ Setting up NestJS app...")
+func setupNestApp(ssh *SSHClient, project string, name string, repo string) {
+	printMessage("Setting up NestJS app...")
 	dir := fmt.Sprintf("/var/www/%s/%s", project, name)
 	ssh.runInteractive(fmt.Sprintf("cd %s && rm -rf *", dir)) // clean if needed
 	ssh.runInteractive(fmt.Sprintf("mkdir -p %s && cd %s", dir, dir))
 	ssh.runInteractive(fmt.Sprintf("cd %s && ", dir)) // for consistency
-	gitCloneRepo(ssh, name)
+	gitCloneRepo(ssh, repo)
 	ssh.runInteractive(fmt.Sprintf("cd %s && yarn install && yarn build && pm2 start dist/src/main.js --name %s", dir, name))
 }
 
-func setupNextApp(ssh *SSHClient, project string, name string) {
-	printMessage("⚙️ Setting up NextJS app...")
+func setupNextApp(ssh *SSHClient, project string, name string, repo string) {
+	printMessage("Setting up NextJS app...")
 	dir := fmt.Sprintf("/var/www/%s/%s", project, name)
 	ssh.runInteractive(fmt.Sprintf("cd %s && rm -rf *", dir))
 	ssh.runInteractive(fmt.Sprintf("mkdir -p %s && cd %s", dir, dir))
-	gitCloneRepo(ssh, "frontend")
+	gitCloneRepo(ssh, repo)
 	ssh.runInteractive(fmt.Sprintf("cd %s && yarn install && yarn build && pm2 start 'yarn start' --name %s", dir, name))
 }
 

@@ -139,14 +139,15 @@ func apply(config Config) {
 		appType := svc.Type
 		domain := svc.Domain
 		port := svc.Port
+		repository := svc.Repository
 
 		setupNginxBlock(ssh, domain, project, name, port)
 
 		if appType == "nestjs" {
-			setupNestApp(ssh, project, name)
+			setupNestApp(ssh, project, name, repository)
 		}
 		if appType == "nextjs" {
-			setupNextApp(ssh, project, name)
+			setupNextApp(ssh, project, name, repository)
 		}
 
 		if needSSL {

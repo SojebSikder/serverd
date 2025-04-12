@@ -16,9 +16,9 @@ type SSHConfig struct {
 	User string `yaml:"user"`
 	Pass string `yaml:"pass"`
 }
-
 type ServiceApp struct {
-	Type   string `yaml:"type"`
-	Domain string `yaml:"domain"`
-	Port   string `yaml:"port"`
+	Type       string `yaml:"type"`
+	Domain     string `yaml:"domain"`
+	Port       string `yaml:"port"`
+	Repository string `yaml:"repository"`
 }

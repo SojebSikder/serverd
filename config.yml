@@ -6,15 +6,12 @@ server:
     pass: root
 
   sudo_password: root
-  ssl: true
-  name: blog
+  ssl: false
+  name: nestjs-boilerplate
 
   services:
     backend:
       type: nestjs
-      domain: test.com
+      domain: 192.168.4.2
+      repository: https://github.com/SojebSikder/nestjs-boilerplate.git
       port: 4000
-    frontend:
-      type: nextjs
-      domain: test.com
-      port: 3000

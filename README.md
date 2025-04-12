@@ -1,16 +1,21 @@
 # Description
+
 Automate ubuntu server configuration
 
 # Run
+
 ```
-go run .
+go run . apply
 ```
+
 Run with another file
+
 ```
-go run . -file=config.yml
+go run . apply -file=config.yml
 ```
 
 # Usage
+
 ```yml
 server:
   ssh:
@@ -28,16 +33,10 @@ server:
       type: nestjs
       domain: test.com
       port: 4000
+      repository: https://github.com/SojebSikder/nestjs-boilerplate.git
     frontend:
       type: nextjs
       domain: test.com
+      repository: https://github.com/SojebSikder/nextjs-boilerplate.git
       port: 3000
-
 ```
-
-# For bash script
-## Step 1: Copy script
-scp -P 2223 setup_ubuntu_server.sh ubuntu@192.168.4.2:/tmp/
-
-## Step 2: SSH and run
-ssh -t -p 2223 ubuntu@192.168.4.2 'bash /tmp/setup_ubuntu_server.sh'
