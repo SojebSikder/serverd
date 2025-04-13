@@ -50,8 +50,9 @@ func (s *SSHClient) runWithSudo(cmd string, password string) error {
 	session.Stdout = os.Stdout
 	session.Stderr = os.Stderr
 
-	fullCmd := fmt.Sprintf(`sudo -S bash -c "%s"`, cmd)
-	fmt.Println("🔧 Running (sudo):", fullCmd)
+	// fullCmd := fmt.Sprintf(`sudo -S bash -c "%s"`, cmd)
+	fullCmd := fmt.Sprintf("echo %s | sudo -S %s", password, cmd)
+	fmt.Println("Running (sudo):", fullCmd)
 
 	if err := session.Start(fullCmd); err != nil {
 		return err
@@ -128,7 +129,8 @@ func test(config Config) {
 	defer ssh.client.Close()
 
 	ssh.runInteractive("ufw status")
-	ssh.runInteractive("ufw allow 'Nginx HTTP'")
+
+	ssh.runInteractive(`-u postgres psql -c "ALTER USER postgres PASSWORD 'root'"`)
 }
 
 func apply(config Config) {
