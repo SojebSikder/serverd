@@ -14,6 +14,11 @@ Run with another file
 go run . apply -file=config.yml
 ```
 
+# Build
+```
+./build.sh
+```
+
 # Usage
 
 ```yml
