@@ -100,7 +100,10 @@ func setupPostgres(ssh *SSHClient) {
 
 func setupNode(ssh *SSHClient) {
 	printMessage("Installing Node.js & PM2...")
-	ssh.runInteractive("curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -")
+	// ssh.runInteractive("curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -")
+	ssh.runInteractive("curl -sL https://deb.nodesource.com/setup_20.x -o nodesource_setup.sh")
+	ssh.runInteractive("bash nodesource_setup.sh")
+
 	ssh.runInteractive("apt install -y nodejs")
 	ssh.runInteractive("npm install -g pm2 yarn")
 }
