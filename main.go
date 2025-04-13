@@ -50,7 +50,7 @@ func (s *SSHClient) runWithSudo(cmd string, password string) error {
 	session.Stdout = os.Stdout
 	session.Stderr = os.Stderr
 
-	fullCmd := fmt.Sprintf("sudo -S bash -c '%s'", cmd)
+	fullCmd := fmt.Sprintf(`sudo -S bash -c "%s"`, cmd)
 	fmt.Println("🔧 Running (sudo):", fullCmd)
 
 	if err := session.Start(fullCmd); err != nil {
@@ -100,6 +100,8 @@ func main() {
 
 	if len(args) > 1 {
 		switch args[1] {
+		case "test":
+			test(config)
 		case "apply":
 			apply(config)
 		case "version":
@@ -110,6 +112,23 @@ func main() {
 		fmt.Println("No arguments passed.")
 		return
 	}
+}
+
+func test(config Config) {
+	host := config.Server.SSH.Host
+	port := config.Server.SSH.Port
+	user := config.Server.SSH.User
+	pass := config.Server.SSH.Pass
+	sudoPassword = config.Server.SudoPassword
+
+	ssh, err := connectSSH(user, pass, host, port)
+	if err != nil {
+		log.Fatalf("SSH connection failed: %v", err)
+	}
+	defer ssh.client.Close()
+
+	ssh.runInteractive("ufw status")
+	ssh.runInteractive("ufw allow 'Nginx HTTP'")
 }
 
 func apply(config Config) {
