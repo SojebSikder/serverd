@@ -57,6 +57,9 @@ func setupNginxBlock(ssh *SSHClient, domain string, project string, service stri
 	path := fmt.Sprintf("/var/www/%s/%s", project, service)
 	confPath := fmt.Sprintf("/etc/nginx/sites-available/%s_%s", project, service)
 
+	fmt.Println("check url")
+	fmt.Println(confPath)
+
 	block := fmt.Sprintf(`server {
 	listen 80;
 	listen [::]:80;

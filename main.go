@@ -51,7 +51,9 @@ func (s *SSHClient) runWithSudo(cmd string, password string) error {
 	session.Stderr = os.Stderr
 
 	// fullCmd := fmt.Sprintf(`sudo -S bash -c "%s"`, cmd)
-	fullCmd := fmt.Sprintf("echo %s | sudo -S %s", password, cmd)
+
+	fullCmd := fmt.Sprintf(`echo %s | sudo -S %s`, password, cmd)
+
 	fmt.Println("Running (sudo):", fullCmd)
 
 	if err := session.Start(fullCmd); err != nil {
@@ -130,7 +132,7 @@ func test(config Config) {
 
 	ssh.runInteractive("ufw status")
 
-	ssh.runInteractive(`-u postgres psql -c "ALTER USER postgres PASSWORD 'root'"`)
+	setupNode(ssh)
 }
 
 func apply(config Config) {
@@ -159,10 +161,10 @@ func apply(config Config) {
 	for name, svc := range config.Server.Services {
 		appType := svc.Type
 		domain := svc.Domain
-		port := svc.Port
+		appPort := svc.Port
 		repository := svc.Repository
 
-		setupNginxBlock(ssh, domain, project, name, port)
+		setupNginxBlock(ssh, domain, project, name, appPort)
 
 		if appType == "nestjs" {
 			setupNestApp(ssh, project, name, repository)
